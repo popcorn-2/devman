@@ -1,0 +1,13 @@
+[package]
+name = "devman"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+executor = { version = "0.1.0", path = "../file-server/executor" }
+popcorn-server = { version = "0.1.0", path = "../file-server/server" }
+proto = { version = "0.1.0", path = "../driver/proto" }
+slab = "0.4.10"
+
+[patch.crates-io]
+fastrand = { path = "../file-server/fastrand" }
