@@ -18,10 +18,10 @@ fn main() {
 
     let srv = popcorn_server::Server::new(":dev", Server::new)
             .expect("failed to launch dev server");
-    let node_handle = srv.handle().as_handle().forge::<proto::client::BusNode>(0)
+    let node_handle = srv.handle().as_handle().forge::<core_protocols::client::driver::BusNode>(0)
             .expect("failed to create root node handle");
 
-	println!("{:#x?}", <Server as proto::server::BusNode>::__vtable());
+	println!("{:#x?}", <Server as core_protocols::server::driver::BusNode>::__vtable());
 
     std::process::Command::new("fs:/system/bin/driver/x86_64_root.exec")
             .stdin(std::process::Stdio::null())
@@ -116,8 +116,8 @@ impl ServerHandler for Server {
         static DISPATCH: OnceLock<DispatchTable> = OnceLock::new();
 
         DISPATCH.get_or_init(|| DispatchTable::new()
-                .add_vtable(<Self as proto::server::BusNode>::__vtable())
-                .add_vtable(<Self as proto::server::DeviceManager>::__vtable())
+                .add_vtable(<Self as core_protocols::server::driver::BusNode>::__vtable())
+                .add_vtable(<Self as core_protocols::server::driver::DeviceManager>::__vtable())
         )
     }
 
@@ -126,7 +126,11 @@ impl ServerHandler for Server {
     }
 }
 
-impl proto::server::BusNode for Server {
+impl core_protocols::server::driver::BusNode for Server {
+	async fn create_nub_with(&self, handle: isize, parent: OwnedHandle<()>, matcher: u128) -> Result<(), Error> {
+		todo!()
+	}
+
     async fn create_child(&self, handle: isize, name: &str) -> Result<ReturnHandle, Error> {
         let mut guard = self.handles.lock().unwrap();
         let handle = guard.get(handle as usize).ok_or(Error::InvalidHandle)?;
@@ -140,7 +144,7 @@ impl proto::server::BusNode for Server {
         handle.children.lock().unwrap().insert(name, new_node.clone());
 	    println!("device tree:\n{:#?}", self.root_node);
         let handle = guard.insert(new_node) as isize;
-        Ok(ReturnHandle::New(handle, Box::from([<dyn proto::server::BusNode>::UID])))
+        Ok(ReturnHandle::New(handle, Box::from([<dyn core_protocols::server::driver::BusNode>::UID])))
     }
 
 	async fn attach_device(&self, bus_handle: isize, device_handle: OwnedHandle<()>) -> Result<(), Error> {
@@ -160,7 +164,7 @@ impl proto::server::BusNode for Server {
     }
 }
 
-impl proto::server::DeviceManager for Server {
+impl core_protocols::server::driver::DeviceManager for Server {
 	async fn search_proto(&self, handle: isize, output_size: usize, low: usize, high: usize) -> Result<Box<[u8]>, Error> {
 		if handle != -1 { return Err(Error::UnsupportedProtocol); }
 
@@ -225,7 +229,7 @@ impl CtorContext for CtorCtx {
 
         VISITORS.get_or_init(
 	        || ProtocolVisitor::new()
-			        .add_visitor::<dyn proto::server::DeviceManager>(|ctx, _| {
+			        .add_visitor::<dyn core_protocols::server::driver::DeviceManager>(|ctx, _| {
 				        if matches!(ctx, CtorCtx::Device(_)) {
 					        Err(Error::UnsupportedProtocol)
 				        } else {

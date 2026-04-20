@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-executor = { version = "0.1.0", path = "../file-server/executor" }
-popcorn-server = { version = "0.1.0", path = "../file-server/server" }
-proto = { version = "0.1.0", path = "../driver/proto" }
+executor = { git = "https://github.com/popcorn-2/popcorn-server.git" }
+popcorn-server = { git = "https://github.com/popcorn-2/popcorn-server.git" }
+core-protocols = { git = "https://github.com/popcorn-2/core-protocols.git" }
 slab = "0.4.10"
 
 [patch.crates-io]
-fastrand = { path = "../file-server/fastrand" }
+fastrand = { git = "https://github.com/popcorn-2/fastrand.git" }
